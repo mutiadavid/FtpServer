@@ -5,8 +5,6 @@
 // <author>Mark Junker</author>
 //-----------------------------------------------------------------------
 
-using JetBrains.Annotations;
-
 using Microsoft.Extensions.Logging;
 
 namespace FubarDev.FtpServer
@@ -21,12 +19,12 @@ namespace FubarDev.FtpServer
         /// </summary>
         /// <param name="log">The <see cref="ILogger"/> to use.</param>
         /// <param name="command">The <see cref="FtpCommand"/> to log.</param>
-        public static void Trace([NotNull] this ILogger log, [NotNull] FtpCommand command)
+        public static void Command(this ILogger log, FtpCommand command)
         {
             var arguments = string.Equals(command.Name, "PASS", System.StringComparison.OrdinalIgnoreCase)
                 ? @"**************** (password omitted)"
                 : command.Argument;
-            log.LogTrace("{name} {arguments}", command.Name, arguments);
+            log.LogDebug("{name} {arguments}", command.Name, arguments);
         }
 
         /// <summary>
@@ -34,9 +32,16 @@ namespace FubarDev.FtpServer
         /// </summary>
         /// <param name="log">The <see cref="ILogger"/> to use.</param>
         /// <param name="response">The <see cref="FtpResponse"/> to log.</param>
-        public static void Trace([NotNull] this ILogger log, [NotNull] FtpResponse response)
+        public static void Trace(this ILogger log, IFtpResponse response)
         {
-            log.LogTrace("{code} {message}", response.Code, response.Message);
+            if (response is FtpResponse ftpResponse)
+            {
+                log.LogTrace("{code} {message}", response.Code, ftpResponse.Message);
+            }
+            else
+            {
+                log.LogTrace(response.ToString());
+            }
         }
 
         /// <summary>
@@ -44,9 +49,16 @@ namespace FubarDev.FtpServer
         /// </summary>
         /// <param name="log">The <see cref="ILogger"/> to use.</param>
         /// <param name="response">The <see cref="FtpResponse"/> to log.</param>
-        public static void Debug([NotNull] this ILogger log, [NotNull] FtpResponse response)
+        public static void Debug(this ILogger log, IFtpResponse response)
         {
-            log.LogDebug("{code} {message}", response.Code, response.Message);
+            if (response is FtpResponse ftpResponse)
+            {
+                log.LogDebug("{code} {message}", response.Code, ftpResponse.Message);
+            }
+            else
+            {
+                log.LogDebug(response.ToString());
+            }
         }
 
         /// <summary>
@@ -54,9 +66,16 @@ namespace FubarDev.FtpServer
         /// </summary>
         /// <param name="log">The <see cref="ILogger"/> to use.</param>
         /// <param name="response">The <see cref="FtpResponse"/> to log.</param>
-        public static void Info([NotNull] this ILogger log, [NotNull] FtpResponse response)
+        public static void Info(this ILogger log, IFtpResponse response)
         {
-            log.LogInformation("{code} {message}", response.Code, response.Message);
+            if (response is FtpResponse ftpResponse)
+            {
+                log.LogInformation("{code} {message}", response.Code, ftpResponse.Message);
+            }
+            else
+            {
+                log.LogInformation(response.ToString());
+            }
         }
 
         /// <summary>
@@ -64,9 +83,16 @@ namespace FubarDev.FtpServer
         /// </summary>
         /// <param name="log">The <see cref="ILogger"/> to use.</param>
         /// <param name="response">The <see cref="FtpResponse"/> to log.</param>
-        public static void Warn([NotNull] this ILogger log, [NotNull] FtpResponse response)
+        public static void Warn(this ILogger log, IFtpResponse response)
         {
-            log.LogWarning("{code} {message}", response.Code, response.Message);
+            if (response is FtpResponse ftpResponse)
+            {
+                log.LogWarning("{code} {message}", response.Code, ftpResponse.Message);
+            }
+            else
+            {
+                log.LogWarning(response.ToString());
+            }
         }
 
         /// <summary>
@@ -74,9 +100,16 @@ namespace FubarDev.FtpServer
         /// </summary>
         /// <param name="log">The <see cref="ILogger"/> to use.</param>
         /// <param name="response">The <see cref="FtpResponse"/> to log.</param>
-        public static void Error([NotNull] this ILogger log, [NotNull] FtpResponse response)
+        public static void Error(this ILogger log, IFtpResponse response)
         {
-            log.LogError("{code} {message}", response.Code, response.Message);
+            if (response is FtpResponse ftpResponse)
+            {
+                log.LogError("{code} {message}", response.Code, ftpResponse.Message);
+            }
+            else
+            {
+                log.LogError(response.ToString());
+            }
         }
 
         /// <summary>
@@ -88,7 +121,7 @@ namespace FubarDev.FtpServer
         /// It logs either a trace, debug, or warning message depending on the
         /// <see cref="FtpResponse.Code"/>.
         /// </remarks>
-        public static void Log([NotNull] this ILogger log, [NotNull] FtpResponse response)
+        public static void Log(this ILogger log, IFtpResponse response)
         {
             if (response.Code >= 200 && response.Code < 300)
             {
@@ -110,7 +143,7 @@ namespace FubarDev.FtpServer
 
 #if NETSTANDARD1_3
         internal static void LogError(
-            [NotNull] this ILogger log,
+            this ILogger log,
             System.Exception exception,
             string message,
             params object[] args)
@@ -119,7 +152,7 @@ namespace FubarDev.FtpServer
         }
 
         internal static void LogWarning(
-            [NotNull] this ILogger log,
+            this ILogger log,
             System.Exception exception,
             string message,
             params object[] args)
@@ -128,7 +161,7 @@ namespace FubarDev.FtpServer
         }
 
         internal static void LogCritical(
-            [NotNull] this ILogger log,
+            this ILogger log,
             System.Exception exception,
             string message,
             params object[] args)

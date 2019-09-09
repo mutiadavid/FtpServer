@@ -5,16 +5,15 @@
 using System;
 using System.Collections.Generic;
 
-using JetBrains.Annotations;
-
 namespace FubarDev.FtpServer
 {
     /// <summary>
     /// Generic feature information.
     /// </summary>
+    [Obsolete("Use an attribute that implements IFeatureInfo, like - for example - FtpFeatureTextAttribute.")]
     public class GenericFeatureInfo : IFeatureInfo
     {
-        private readonly Func<IFtpConnection, string> _toString;
+        private readonly Func<IFtpConnection, string>? _toString;
 
         private readonly string _name;
 
@@ -24,7 +23,8 @@ namespace FubarDev.FtpServer
         /// <param name="name">The feature name.</param>
         /// <param name="requiresAuthentication">Indicates whether this extension requires an authenticated user.</param>
         /// <param name="additionalNames">The additional feature names.</param>
-        public GenericFeatureInfo([NotNull] string name, bool requiresAuthentication, [NotNull, ItemNotNull] params string[] additionalNames)
+        [Obsolete("Use an attribute that implements IFeatureInfo, like - for example - FtpFeatureTextAttribute.")]
+        public GenericFeatureInfo(string name, bool requiresAuthentication, params string[] additionalNames)
             : this(name, null, requiresAuthentication, additionalNames)
         {
         }
@@ -36,7 +36,8 @@ namespace FubarDev.FtpServer
         /// <param name="toString">The function to use to create a <c>FEAT</c> string.</param>
         /// <param name="requiresAuthentication">Indicates whether this extension requires an authenticated user.</param>
         /// <param name="additionalNames">The additional feature names.</param>
-        public GenericFeatureInfo([NotNull] string name, [CanBeNull] Func<IFtpConnection, string> toString, bool requiresAuthentication, [NotNull, ItemNotNull] params string[] additionalNames)
+        [Obsolete("Use an attribute that implements IFeatureInfo, like - for example - FtpFeatureTextAttribute.")]
+        public GenericFeatureInfo(string name, Func<IFtpConnection, string>? toString, bool requiresAuthentication, params string[] additionalNames)
         {
             _name = name;
             var names = new HashSet<string> { name };
@@ -51,20 +52,24 @@ namespace FubarDev.FtpServer
         }
 
         /// <inheritdoc/>
+        [Obsolete("Features don't have names. Use an attribute that implements IFeatureInfo, like - for example - FtpFeatureTextAttribute.")]
         public ISet<string> Names { get; }
 
         /// <inheritdoc />
+        [Obsolete("This requirement is automatically determined through the FTP command handler.")]
         public bool RequiresAuthentication { get; }
 
         /// <inheritdoc/>
+        [Obsolete("Use BuildInfo(object, IFtpConnection) instead.")]
         public string BuildInfo(IFtpConnection connection)
         {
-            if (_toString == null)
-            {
-                return _name;
-            }
+            return _toString == null ? _name : _toString(connection);
+        }
 
-            return _toString(connection);
+        /// <inheritdoc />
+        public IEnumerable<string> BuildInfo(Type reference, IFtpConnection connection)
+        {
+            return new[] { BuildInfo(connection) };
         }
     }
 }

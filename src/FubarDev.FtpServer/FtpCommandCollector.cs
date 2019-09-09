@@ -7,11 +7,11 @@
 
 using System;
 using System.Collections.Generic;
+#if DEBUG
 using System.Diagnostics;
+#endif
 using System.Linq;
 using System.Text;
-
-using JetBrains.Annotations;
 
 namespace FubarDev.FtpServer
 {
@@ -53,8 +53,6 @@ namespace FubarDev.FtpServer
         /// </summary>
         /// <param name="buffer">The buffer to collect the data from.</param>
         /// <returns>The found <see cref="FtpCommand"/>s.</returns>
-        [NotNull]
-        [ItemNotNull]
         public IEnumerable<FtpCommand> Collect(ReadOnlySpan<byte> buffer)
         {
 #if DEBUG
@@ -71,9 +69,6 @@ namespace FubarDev.FtpServer
             commands.AddRange(_telnetInputParser.Collect(buffer));
             return commands;
         }
-
-        [NotNull]
-        [ItemNotNull]
         private IEnumerable<FtpCommand> InternalCollect(ReadOnlySpan<byte> buffer)
         {
             var commands = new List<FtpCommand>();
@@ -149,7 +144,7 @@ namespace FubarDev.FtpServer
             return commands;
         }
 
-        private FtpCommand CreateFtpCommand([NotNull] byte[] command)
+        private FtpCommand CreateFtpCommand(byte[] command)
         {
             var message = Encoding.GetString(command, 0, command.Length);
             return FtpCommand.Parse(message);
@@ -167,6 +162,15 @@ namespace FubarDev.FtpServer
             protected override IEnumerable<FtpCommand> DataReceived(ReadOnlySpan<byte> data)
             {
                 return _collector.InternalCollect(data);
+            }
+
+            /// <inheritdoc />
+            protected override IEnumerable<FtpCommand> InterruptProcess()
+            {
+                return new[]
+                {
+                    new FtpCommand("ABOR", null),
+                };
             }
         }
     }

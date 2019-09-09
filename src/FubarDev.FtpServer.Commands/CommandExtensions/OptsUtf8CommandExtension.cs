@@ -2,27 +2,28 @@
 // Copyright (c) Fubar Development Junker. All rights reserved.
 // </copyright>
 
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using JetBrains.Annotations;
+using FubarDev.FtpServer.Features;
 
 namespace FubarDev.FtpServer.CommandExtensions
 {
     /// <summary>
     /// The implementation of the <c>OPTS UTF8</c> command.
     /// </summary>
+    [FtpCommandHandlerExtension("UTF8", "OPTS", false)]
+    [FtpCommandHandlerExtension("UTF-8", "OPTS", false)]
+    [FtpFeatureText("UTF8")]
     public class OptsUtf8CommandExtension : FtpCommandHandlerExtension
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="OptsUtf8CommandExtension"/> class.
-        /// </summary>
-        /// <param name="connectionAccessor">The accessor to get the connection that is active during the <see cref="Process"/> method execution.</param>
-        public OptsUtf8CommandExtension([NotNull] IFtpConnectionAccessor connectionAccessor)
-            : base(connectionAccessor, "OPTS", "UTF8", "UTF-8")
-        {
-        }
+        private static readonly UTF8Encoding _encodingUtf8 = new UTF8Encoding(false);
+
+        /// <inheritdoc />
+        [Obsolete("Use the FtpCommandHandlerExtension attribute instead.")]
+        public override bool? IsLoginRequired { get; } = false;
 
         /// <inheritdoc />
         public override void InitializeConnectionData()
@@ -30,22 +31,26 @@ namespace FubarDev.FtpServer.CommandExtensions
         }
 
         /// <inheritdoc />
-        public override Task<FtpResponse> Process(FtpCommand command, CancellationToken cancellationToken)
+        public override Task<IFtpResponse?> Process(FtpCommand command, CancellationToken cancellationToken)
         {
+            var encodingFeature = Connection.Features.Get<IEncodingFeature>();
             switch (command.Argument.ToUpperInvariant())
             {
-                case "ON":
-                    Connection.Encoding = Encoding.UTF8;
-                    return Task.FromResult(new FtpResponse(200, "Command okay."));
+                case "ON": // Compatibility feature...
+                case "NLST": // NLST and other paths are transmitted as UTF-8
+                    encodingFeature.Reset();
+                    encodingFeature.Encoding = encodingFeature.NlstEncoding = _encodingUtf8;
+                    break;
                 case "":
-                    Connection.Data.NlstEncoding = null;
-                    return Task.FromResult(new FtpResponse(200, "Command okay."));
-                case "NLST":
-                    Connection.Data.NlstEncoding = Encoding.UTF8;
-                    return Task.FromResult(new FtpResponse(200, "Command okay."));
+                    // Only for non-NLST paths are transmitted as UTF-8
+                    encodingFeature.Reset();
+                    encodingFeature.Encoding = _encodingUtf8;
+                    break;
                 default:
-                    return Task.FromResult(new FtpResponse(501, "Syntax error in parameters or arguments."));
+                    return Task.FromResult<IFtpResponse?>(new FtpResponse(501, T("Syntax error in parameters or arguments.")));
             }
+
+            return Task.FromResult<IFtpResponse?>(new FtpResponse(200, T("Command okay.")));
         }
     }
 }

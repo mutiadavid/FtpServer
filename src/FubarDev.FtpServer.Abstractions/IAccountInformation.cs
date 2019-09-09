@@ -2,9 +2,10 @@
 // Copyright (c) Fubar Development Junker. All rights reserved.
 // </copyright>
 
-using FubarDev.FtpServer.AccountManagement;
+using System;
+using System.Security.Claims;
 
-using JetBrains.Annotations;
+using FubarDev.FtpServer.AccountManagement;
 
 namespace FubarDev.FtpServer
 {
@@ -14,15 +15,14 @@ namespace FubarDev.FtpServer
     public interface IAccountInformation
     {
         /// <summary>
-        /// Gets the current user name.
+        /// Gets the current user.
         /// </summary>
-        [NotNull]
+        [Obsolete("Use FtpUser to get the user information.")]
         IFtpUser User { get; }
 
         /// <summary>
-        /// Gets the membership provider that was used to authenticate the user.
+        /// Gets the current FTP user.
         /// </summary>
-        [NotNull]
-        IMembershipProvider AuthenticatedBy { get; }
+        ClaimsPrincipal FtpUser { get; }
     }
 }

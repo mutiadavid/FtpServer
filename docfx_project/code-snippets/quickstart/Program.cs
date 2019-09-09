@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 using FubarDev.FtpServer;
 using FubarDev.FtpServer.FileSystem.DotNet;

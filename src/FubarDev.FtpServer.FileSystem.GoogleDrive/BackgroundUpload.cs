@@ -3,15 +3,15 @@
 // </copyright>
 
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 using FubarDev.FtpServer.BackgroundTransfer;
 
-using Google.Apis.Drive.v3.Data;
 using Google.Apis.Upload;
 
-using JetBrains.Annotations;
+using File = Google.Apis.Drive.v3.Data.File;
 
 namespace FubarDev.FtpServer.FileSystem.GoogleDrive
 {
@@ -20,10 +20,7 @@ namespace FubarDev.FtpServer.FileSystem.GoogleDrive
     /// </summary>
     internal class BackgroundUpload : IBackgroundTransfer
     {
-        [NotNull]
         private readonly ITemporaryData _tempData;
-
-        [NotNull]
         private readonly IGoogleDriveFileSystem _fileSystem;
 
         private bool _notifiedAsFinished;
@@ -38,10 +35,10 @@ namespace FubarDev.FtpServer.FileSystem.GoogleDrive
         /// <param name="tempData">The temporary data used to read from.</param>
         /// <param name="fileSystem">The file system that initiated this background upload.</param>
         public BackgroundUpload(
-            [NotNull] string fullPath,
-            [NotNull] File file,
-            [NotNull] ITemporaryData tempData,
-            [NotNull] IGoogleDriveFileSystem fileSystem)
+            string fullPath,
+            File file,
+            ITemporaryData tempData,
+            IGoogleDriveFileSystem fileSystem)
         {
             TransferId = fullPath;
             File = file;
@@ -65,7 +62,7 @@ namespace FubarDev.FtpServer.FileSystem.GoogleDrive
         /// <inheritdoc />
         public async Task Start(IProgress<long> progress, CancellationToken cancellationToken)
         {
-            using (var stream = await _tempData.OpenAsync())
+            using (var stream = await _tempData.OpenAsync().ConfigureAwait(false))
             {
                 try
                 {
@@ -75,10 +72,10 @@ namespace FubarDev.FtpServer.FileSystem.GoogleDrive
                         stream,
                         "application/octet-stream");
                     upload.ProgressChanged += (uploadProgress) => { progress.Report(uploadProgress.BytesSent); };
-                    var result = await upload.UploadAsync(cancellationToken);
+                    var result = await upload.UploadAsync(cancellationToken).ConfigureAwait(false);
                     if (result.Status == UploadStatus.Failed)
                     {
-                        throw new Exception(result.Exception.Message, result.Exception);
+                        throw new IOException(result.Exception.Message, result.Exception);
                     }
                 }
                 finally

@@ -5,11 +5,11 @@
 // <author>Mark Junker</author>
 //-----------------------------------------------------------------------
 
+using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 using FubarDev.FtpServer.AccountManagement.Anonymous;
-
-using JetBrains.Annotations;
 
 namespace FubarDev.FtpServer.AccountManagement
 {
@@ -36,9 +36,35 @@ namespace FubarDev.FtpServer.AccountManagement
         /// Initializes a new instance of the <see cref="AnonymousMembershipProvider"/> class.
         /// </summary>
         /// <param name="anonymousPasswordValidator">Anonymous login validation.</param>
-        public AnonymousMembershipProvider([NotNull] IAnonymousPasswordValidator anonymousPasswordValidator)
+        public AnonymousMembershipProvider(IAnonymousPasswordValidator anonymousPasswordValidator)
         {
             _anonymousPasswordValidator = anonymousPasswordValidator;
+        }
+
+        /// <summary>
+        /// Create a claims principal for an anonymous (authenticated!) user.
+        /// </summary>
+        /// <param name="email">The anonymous users e-mail address.</param>
+        /// <returns>The anonymous claims principal.</returns>
+        public static ClaimsPrincipal CreateAnonymousPrincipal(string? email)
+        {
+            var anonymousClaims = new List<Claim>
+            {
+                new Claim(ClaimsIdentity.DefaultNameClaimType, "anonymous"),
+                new Claim(ClaimTypes.Anonymous, email ?? string.Empty),
+                new Claim(ClaimsIdentity.DefaultRoleClaimType, "anonymous"),
+                new Claim(ClaimsIdentity.DefaultRoleClaimType, "guest"),
+                new Claim(ClaimTypes.AuthenticationMethod, "anonymous"),
+            };
+
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                anonymousClaims.Add(new Claim(ClaimTypes.Email, email, ClaimValueTypes.Email));
+            }
+
+            var identity = new ClaimsIdentity(anonymousClaims, "anonymous");
+            var principal = new ClaimsPrincipal(identity);
+            return principal;
         }
 
         /// <inheritdoc/>
@@ -49,7 +75,7 @@ namespace FubarDev.FtpServer.AccountManagement
                 if (_anonymousPasswordValidator.IsValid(password))
                 {
                     return Task.FromResult(
-                        new MemberValidationResult(MemberValidationStatus.Anonymous, new AnonymousFtpUser(password)));
+                        new MemberValidationResult(MemberValidationStatus.Anonymous, CreateAnonymousPrincipal(password)));
                 }
 
                 return Task.FromResult(new MemberValidationResult(MemberValidationStatus.InvalidAnonymousEmail));

@@ -4,8 +4,6 @@
 
 using System.Collections.Generic;
 
-using JetBrains.Annotations;
-
 namespace FubarDev.FtpServer.CommandHandlers
 {
     /// <summary>
@@ -14,9 +12,8 @@ namespace FubarDev.FtpServer.CommandHandlers
     public interface IFtpCommandHandlerExtensionHost : IFtpCommandHandler
     {
         /// <summary>
-        /// Gets the extensions hosted by the <see cref="FtpCommandHandler"/>.
+        /// Gets or sets the extensions hosted by the <see cref="FtpCommandHandler"/>.
         /// </summary>
-        [NotNull]
-        IDictionary<string, IFtpCommandHandlerExtension> Extensions { get; }
+        IDictionary<string, IFtpCommandHandlerExtension> Extensions { get; set; }
     }
 }

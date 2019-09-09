@@ -7,8 +7,6 @@
 
 using System;
 
-using JetBrains.Annotations;
-
 namespace FubarDev.FtpServer.FileSystem
 {
     /// <summary>
@@ -19,13 +17,11 @@ namespace FubarDev.FtpServer.FileSystem
         /// <summary>
         /// Gets the name of the file system entry.
         /// </summary>
-        [NotNull]
         string Name { get; }
 
         /// <summary>
         /// Gets the file entry permissions.
         /// </summary>
-        [NotNull]
         IUnixPermissions Permissions { get; }
 
         /// <summary>
@@ -42,11 +38,5 @@ namespace FubarDev.FtpServer.FileSystem
         /// Gets the number of links.
         /// </summary>
         long NumberOfLinks { get; }
-
-        /// <summary>
-        /// Gets the file system this entry belongs to.
-        /// </summary>
-        [NotNull]
-        IUnixFileSystem FileSystem { get; }
     }
 }

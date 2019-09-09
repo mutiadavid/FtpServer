@@ -23,7 +23,7 @@ namespace FubarDev.FtpServer.FileSystem
         /// </summary>
         public EmptyUnixFileSystem()
         {
-            Root = new EmptyRootDirectory(this);
+            Root = new EmptyRootDirectory();
         }
 
         /// <inheritdoc/>
@@ -39,13 +39,13 @@ namespace FubarDev.FtpServer.FileSystem
         public bool SupportsNonEmptyDirectoryDelete => false;
 
         /// <inheritdoc/>
-        public Task<IBackgroundTransfer> AppendAsync(IUnixFileEntry fileEntry, long? startPosition, Stream data, CancellationToken cancellationToken)
+        public Task<IBackgroundTransfer?> AppendAsync(IUnixFileEntry fileEntry, long? startPosition, Stream data, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public Task<IBackgroundTransfer> CreateAsync(IUnixDirectoryEntry targetDirectory, string fileName, Stream data, CancellationToken cancellationToken)
+        public Task<IBackgroundTransfer?> CreateAsync(IUnixDirectoryEntry targetDirectory, string fileName, Stream data, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }
@@ -63,9 +63,9 @@ namespace FubarDev.FtpServer.FileSystem
         }
 
         /// <inheritdoc/>
-        public Task<IUnixFileSystemEntry> GetEntryByNameAsync(IUnixDirectoryEntry directoryEntry, string name, CancellationToken cancellationToken)
+        public Task<IUnixFileSystemEntry?> GetEntryByNameAsync(IUnixDirectoryEntry directoryEntry, string name, CancellationToken cancellationToken)
         {
-            return Task.FromResult<IUnixFileSystemEntry>(null);
+            return Task.FromResult<IUnixFileSystemEntry?>(null);
         }
 
         /// <inheritdoc/>
@@ -81,7 +81,7 @@ namespace FubarDev.FtpServer.FileSystem
         }
 
         /// <inheritdoc/>
-        public Task<IBackgroundTransfer> ReplaceAsync(IUnixFileEntry fileEntry, Stream data, CancellationToken cancellationToken)
+        public Task<IBackgroundTransfer?> ReplaceAsync(IUnixFileEntry fileEntry, Stream data, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();
         }
@@ -100,16 +100,13 @@ namespace FubarDev.FtpServer.FileSystem
 
         private class EmptyRootDirectory : IUnixDirectoryEntry
         {
-            public EmptyRootDirectory(EmptyUnixFileSystem fileSystem)
+            public EmptyRootDirectory()
             {
-                FileSystem = fileSystem;
                 var accessMode = new GenericAccessMode(true, false, false);
                 Permissions = new GenericUnixPermissions(accessMode, accessMode, accessMode);
             }
 
             public DateTimeOffset? CreatedTime => null;
-
-            public IUnixFileSystem FileSystem { get; }
 
             public string Group => "group";
 

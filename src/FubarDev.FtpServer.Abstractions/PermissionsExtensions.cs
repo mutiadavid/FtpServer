@@ -3,12 +3,11 @@
 // </copyright>
 
 using System;
+using System.Security.Claims;
 
 using FubarDev.FtpServer.AccountManagement;
 using FubarDev.FtpServer.FileSystem;
 using FubarDev.FtpServer.FileSystem.Generic;
-
-using JetBrains.Annotations;
 
 namespace FubarDev.FtpServer
 {
@@ -24,11 +23,12 @@ namespace FubarDev.FtpServer
         /// <param name="entity">The entity owner information.</param>
         /// <param name="user">The FTP user to determine the access mode for.</param>
         /// <returns>The effective access mode for the <paramref name="user"/>.</returns>
-        [NotNull]
-        public static IAccessMode GetAccessModeFor([NotNull] this IUnixPermissions permissions, [NotNull] IUnixOwner entity, [NotNull] IFtpUser user)
+        [Obsolete("Use the overload with ClaimsPrincipal.")]
+        public static IAccessMode GetAccessModeFor(this IUnixPermissions permissions, IUnixOwner entity, IFtpUser user)
         {
-            var isUser = string.Equals(entity.Owner, user.Name, StringComparison.OrdinalIgnoreCase);
-            var isGroup = user.IsInGroup(entity.Group);
+            var isUser = string.Equals(entity.GetOwner(), user.Name, StringComparison.OrdinalIgnoreCase);
+            var group = entity.GetGroup();
+            var isGroup = group != null && user.IsInGroup(group);
             var canRead = (isUser && permissions.User.Read)
                           || (isGroup && permissions.Group.Read)
                           || permissions.Other.Read;
@@ -39,6 +39,54 @@ namespace FubarDev.FtpServer
                              || (isGroup && permissions.Group.Execute)
                              || permissions.Other.Execute;
             return new GenericAccessMode(canRead, canWrite, canExecute);
+        }
+
+        /// <summary>
+        /// Gets the effective access mode for an <paramref name="entity"/> for the given <paramref name="user"/>.
+        /// </summary>
+        /// <param name="permissions">The permissions used to build the access mode.</param>
+        /// <param name="entity">The entity owner information.</param>
+        /// <param name="user">The FTP user to determine the access mode for.</param>
+        /// <returns>The effective access mode for the <paramref name="user"/>.</returns>
+        public static IAccessMode GetAccessModeFor(this IUnixPermissions permissions, IUnixOwner entity, ClaimsPrincipal user)
+        {
+            var isUser = string.Equals(entity.GetOwner(), user.Identity.Name, StringComparison.OrdinalIgnoreCase);
+            var group = entity.GetGroup();
+            var isGroup = group != null && user.IsInRole(group);
+            var canRead = (isUser && permissions.User.Read)
+                || (isGroup && permissions.Group.Read)
+                || permissions.Other.Read;
+            var canWrite = (isUser && permissions.User.Write)
+                || (isGroup && permissions.Group.Write)
+                || permissions.Other.Write;
+            var canExecute = (isUser && permissions.User.Execute)
+                || (isGroup && permissions.Group.Execute)
+                || permissions.Other.Execute;
+            return new GenericAccessMode(canRead, canWrite, canExecute);
+        }
+
+        private static string? GetOwner(this IUnixOwner entity)
+        {
+            try
+            {
+                return entity.Owner;
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
+        }
+
+        private static string? GetGroup(this IUnixOwner entity)
+        {
+            try
+            {
+                return entity.Group;
+            }
+            catch (ArgumentException)
+            {
+                return null;
+            }
         }
     }
 }

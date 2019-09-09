@@ -5,13 +5,12 @@
 using System;
 using System.Collections.Generic;
 
-using JetBrains.Annotations;
-
 namespace FubarDev.FtpServer.AccountManagement
 {
     /// <summary>
     /// An anonymous FTP user.
     /// </summary>
+    [Obsolete("Use ClaimsPrincipal")]
     public class AnonymousFtpUser : IAnonymousFtpUser
     {
         private readonly HashSet<string> _guestGroups = new HashSet<string>(new[] { "anonymous", "guest" }, StringComparer.OrdinalIgnoreCase);
@@ -20,7 +19,7 @@ namespace FubarDev.FtpServer.AccountManagement
         /// Initializes a new instance of the <see cref="AnonymousFtpUser"/> class.
         /// </summary>
         /// <param name="email">The anonymous users email address.</param>
-        public AnonymousFtpUser([CanBeNull] string email)
+        public AnonymousFtpUser(string? email)
         {
             Email = email;
         }
@@ -31,7 +30,7 @@ namespace FubarDev.FtpServer.AccountManagement
         /// <summary>
         /// Gets the anonymous users email address.
         /// </summary>
-        public string Email { get; }
+        public string? Email { get; }
 
         /// <inheritdoc/>
         public bool IsInGroup(string groupName)

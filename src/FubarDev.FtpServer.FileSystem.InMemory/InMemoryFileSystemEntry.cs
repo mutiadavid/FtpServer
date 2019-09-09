@@ -3,10 +3,9 @@
 // </copyright>
 
 using System;
+using System.Security.Claims;
 
 using FubarDev.FtpServer.AccountManagement;
-
-using JetBrains.Annotations;
 
 namespace FubarDev.FtpServer.FileSystem.InMemory
 {
@@ -18,17 +17,14 @@ namespace FubarDev.FtpServer.FileSystem.InMemory
         /// <summary>
         /// Initializes a new instance of the <see cref="InMemoryFileSystemEntry"/> class.
         /// </summary>
-        /// <param name="fileSystem">The file system this entry belongs to.</param>
         /// <param name="parent">The parent entry.</param>
         /// <param name="name">The name of this entry.</param>
         /// <param name="permissions">The permissions of this entry.</param>
         protected InMemoryFileSystemEntry(
-            IUnixFileSystem fileSystem,
-            InMemoryDirectoryEntry parent,
+            InMemoryDirectoryEntry? parent,
             string name,
             IUnixPermissions permissions)
         {
-            FileSystem = fileSystem;
             Name = name;
             Permissions = permissions;
             Parent = parent;
@@ -56,25 +52,33 @@ namespace FubarDev.FtpServer.FileSystem.InMemory
         public DateTimeOffset? CreatedTime { get; private set; }
 
         /// <inheritdoc />
-        public long NumberOfLinks { get; } = 0;
-
-        /// <inheritdoc />
-        public IUnixFileSystem FileSystem { get; }
+        public long NumberOfLinks { get; } = 1;
 
         /// <summary>
         /// Gets or sets the parent entry.
         /// </summary>
-        [CanBeNull]
-        public InMemoryDirectoryEntry Parent { get; set; }
+        public InMemoryDirectoryEntry? Parent { get; set; }
 
         /// <summary>
         /// Configure directory entry as owned by given <paramref name="user"/>.
         /// </summary>
         /// <param name="user">The user that becomes the new owner of this directory entry.</param>
         /// <returns>The changed file system entry.</returns>
+        [Obsolete("Use the overload with ClaimsPrincipal.")]
         public InMemoryFileSystemEntry WithOwner(IFtpUser user)
         {
             Owner = user.Name;
+            return this;
+        }
+
+        /// <summary>
+        /// Configure directory entry as owned by given <paramref name="user"/>.
+        /// </summary>
+        /// <param name="user">The user that becomes the new owner of this directory entry.</param>
+        /// <returns>The changed file system entry.</returns>
+        public InMemoryFileSystemEntry WithOwner(ClaimsPrincipal user)
+        {
+            Owner = user.Identity.Name;
             return this;
         }
 

@@ -3,8 +3,7 @@
 // </copyright>
 
 using System;
-
-using JetBrains.Annotations;
+using System.Collections.Generic;
 
 namespace FubarDev.FtpServer
 {
@@ -13,11 +12,13 @@ namespace FubarDev.FtpServer
     /// </summary>
     public class ConnectionEventArgs : EventArgs
     {
+        private readonly List<ConnectionInitAsyncDelegate> _asyncInitFunctions = new List<ConnectionInitAsyncDelegate>();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ConnectionEventArgs"/> class.
         /// </summary>
         /// <param name="connection">The connection of the event.</param>
-        public ConnectionEventArgs([NotNull] IFtpConnection connection)
+        public ConnectionEventArgs(IFtpConnection connection)
         {
             Connection = connection;
         }
@@ -25,7 +26,20 @@ namespace FubarDev.FtpServer
         /// <summary>
         /// Gets the connection for this event.
         /// </summary>
-        [NotNull]
         public IFtpConnection Connection { get; }
+
+        /// <summary>
+        /// Gets the list of async init functions.
+        /// </summary>
+        public IEnumerable<ConnectionInitAsyncDelegate> AsyncInitFunctions => _asyncInitFunctions;
+
+        /// <summary>
+        /// Adds a new async init function.
+        /// </summary>
+        /// <param name="asyncInitFunc">The async init function to add.</param>
+        public void AddAsyncInit(ConnectionInitAsyncDelegate asyncInitFunc)
+        {
+            _asyncInitFunctions.Add(asyncInitFunc);
+        }
     }
 }

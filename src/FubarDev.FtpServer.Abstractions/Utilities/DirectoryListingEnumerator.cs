@@ -9,8 +9,6 @@ using System.Linq;
 
 using FubarDev.FtpServer.FileSystem;
 
-using JetBrains.Annotations;
-
 namespace FubarDev.FtpServer.Utilities
 {
     /// <summary>
@@ -35,6 +33,7 @@ namespace FubarDev.FtpServer.Utilities
         /// <param name="returnDotEntries"><code>true</code> when this enumerator should return the dot entries.</param>
         public DirectoryListingEnumerator(IEnumerable<IUnixFileSystemEntry> entries, IUnixFileSystem fileSystem, Stack<IUnixDirectoryEntry> pathEntries, bool returnDotEntries)
         {
+            FileSystem = fileSystem;
             _pathEntries = pathEntries;
 
             var topPathEntries = pathEntries.Take(3).ToList();
@@ -43,7 +42,8 @@ namespace FubarDev.FtpServer.Utilities
             {
                 case 0:
                     CurrentDirectory = fileSystem.Root;
-                    ParentDirectory = GrandParentDirectory = null;
+                    ParentDirectory = null;
+                    GrandParentDirectory = null;
                     break;
                 case 1:
                     CurrentDirectory = topPathEntries[0];
@@ -77,27 +77,28 @@ namespace FubarDev.FtpServer.Utilities
         }
 
         /// <summary>
+        /// Gets the file system of the entries to be enumerated.
+        /// </summary>
+        public IUnixFileSystem FileSystem { get; }
+
+        /// <summary>
         /// Gets the current directory.
         /// </summary>
-        [NotNull]
         public IUnixDirectoryEntry CurrentDirectory { get; }
 
         /// <summary>
         /// Gets the parent directory.
         /// </summary>
-        [CanBeNull]
-        public IUnixDirectoryEntry ParentDirectory { get; }
+        public IUnixDirectoryEntry? ParentDirectory { get; }
 
         /// <summary>
         /// Gets the grand parent directory.
         /// </summary>
-        [CanBeNull]
-        public IUnixDirectoryEntry GrandParentDirectory { get; }
+        public IUnixDirectoryEntry? GrandParentDirectory { get; }
 
         /// <summary>
         /// Gets the name of the entry which might be different from the original entries name.
         /// </summary>
-        [NotNull]
         public string Name
         {
             get
@@ -105,18 +106,17 @@ namespace FubarDev.FtpServer.Utilities
                 if (_enumerateDotEntries)
                 {
                     Debug.Assert(_dotEntriesEnumerator.Current != null, "_dotEntriesEnumerator.Current != null");
-                    return _dotEntriesEnumerator.Current.Item2;
+                    return _dotEntriesEnumerator.Current!.Item2;
                 }
 
                 Debug.Assert(_entriesEnumerator.Current != null, "_entriesEnumerator.Current != null");
-                return _entriesEnumerator.Current.Name;
+                return _entriesEnumerator.Current!.Name;
             }
         }
 
         /// <summary>
         /// Gets the file system entry.
         /// </summary>
-        [NotNull]
         public IUnixFileSystemEntry Entry
         {
             get
@@ -124,11 +124,11 @@ namespace FubarDev.FtpServer.Utilities
                 if (_enumerateDotEntries)
                 {
                     Debug.Assert(_dotEntriesEnumerator.Current != null, "_dotEntriesEnumerator.Current != null");
-                    return _dotEntriesEnumerator.Current.Item1;
+                    return _dotEntriesEnumerator.Current!.Item1;
                 }
 
                 Debug.Assert(_entriesEnumerator.Current != null, "_entriesEnumerator.Current != null");
-                return _entriesEnumerator.Current;
+                return _entriesEnumerator.Current!;
             }
         }
 
